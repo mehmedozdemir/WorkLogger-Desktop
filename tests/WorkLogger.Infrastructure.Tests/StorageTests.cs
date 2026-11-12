@@ -34,7 +34,7 @@ public sealed class StorageTests : IDisposable
     public void Migrate_is_idempotent()
     {
         _db.Migrate();
-        Assert.Equal(1, _db.SchemaVersion);
+        Assert.Equal(2, _db.SchemaVersion);
     }
 
     [Fact]

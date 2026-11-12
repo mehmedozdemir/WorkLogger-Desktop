@@ -31,16 +31,26 @@ public sealed class LegacyTrackerImporter(Database db, ActivityRepository activi
                 : [];
         }
 
+        var imported = 0;
         using (var c = db.Open())
         using (var tx = c.BeginTransaction())
         {
+            // İki izleyici aynı anda çalışmış olabilir. Çift sayımı önlemek için eski veri, yeni
+            // izleyicinin ilk kaydına kadar alınır; o andan sonrası yeni izleyiciye aittir.
+            var cutoffMs = c.ExecuteScalar<long?>(
+                "SELECT MIN(start_ms) FROM segments WHERE source = @source", new { source = ActivityRepository.SourceAgent }, tx);
+            DateTimeOffset? cutoff = cutoffMs is { } ms ? DateTimeOffset.FromUnixTimeMilliseconds(ms) : null;
+
             c.Execute("DELETE FROM segments WHERE source = @source", new { source = ActivityRepository.SourcePythonImport }, tx);
             foreach (var s in segments)
             {
                 var start = DateTimeOffset.FromUnixTimeMilliseconds((long)(s.StartTs * 1000)).ToLocalTime();
                 var end = DateTimeOffset.FromUnixTimeMilliseconds((long)(s.EndTs * 1000)).ToLocalTime();
+                if (cutoff is { } limit && end > limit)
+                    end = limit;
                 if (end <= start)
                     continue;
+                imported++;
                 c.Execute(
                     "INSERT INTO segments (day, start_ms, end_ms, app, title, idle, source) VALUES (@day, @start, @end, @app, @title, @idle, @source)",
                     new
@@ -58,17 +68,17 @@ public sealed class LegacyTrackerImporter(Database db, ActivityRepository activi
             tx.Commit();
         }
 
-        var imported = 0;
+        var importedCommits = 0;
         foreach (var commit in commits)
         {
             var ts = DateTimeOffset.FromUnixTimeMilliseconds((long)(commit.Ts * 1000)).ToLocalTime();
             if (activity.UpsertCommit(new CommitInfo(commit.Repo ?? "", commit.Sha ?? "", commit.Branch ?? "", commit.Message ?? "", ts)))
-                imported++;
+                importedCommits++;
         }
 
         DateOnly? first = segments.Count > 0 ? DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds((long)(segments[0].StartTs * 1000)).LocalDateTime) : null;
         DateOnly? last = segments.Count > 0 ? DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds((long)(segments[^1].StartTs * 1000)).LocalDateTime) : null;
-        return new ImportResult(segments.Count, imported, first, last);
+        return new ImportResult(imported, importedCommits, first, last);
     }
 
     private static bool HasTable(SqliteConnection c, string name) =>

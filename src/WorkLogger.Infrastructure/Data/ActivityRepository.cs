@@ -51,6 +51,17 @@ public sealed class ActivityRepository(Database db)
     public IReadOnlyList<ActivitySegment> SegmentsForDays(DateOnly from, DateOnly to) =>
         Segments(StartOf(from), StartOf(to.AddDays(1)));
 
+    /// <summary>Gün başına aktif (boşta olmayan) dakika; hızlı özetler ve hatırlatmalar için.</summary>
+    public Dictionary<DateOnly, double> ActiveMinutesByDay(DateOnly from, DateOnly to)
+    {
+        using var c = db.Open();
+        return c.Query<DayMinutesRow>(
+                "SELECT day AS Day, SUM(end_ms - start_ms) / 60000.0 AS Minutes FROM segments " +
+                "WHERE idle = 0 AND day BETWEEN @from AND @to GROUP BY day",
+                new { from = from.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), to = to.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) })
+            .ToDictionary(r => DateOnly.ParseExact(r.Day, "yyyy-MM-dd", CultureInfo.InvariantCulture), r => r.Minutes);
+    }
+
     public DateOnly? FirstDay()
     {
         using var c = db.Open();
@@ -130,6 +141,12 @@ public sealed class ActivityRepository(Database db)
             App,
             Title,
             Idle != 0);
+    }
+
+    private sealed class DayMinutesRow
+    {
+        public string Day { get; set; } = "";
+        public double Minutes { get; set; }
     }
 
     private sealed class CommitRow

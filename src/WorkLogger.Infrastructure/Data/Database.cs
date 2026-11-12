@@ -94,5 +94,36 @@ public sealed class Database
             updated_ms INTEGER NOT NULL
         );
         """,
+
+        // v2 — kullanıcının gün sonu çalışması: worklog taslakları, elle atamalar, gün kapanışları
+        """
+        CREATE TABLE worklog_drafts (
+            day         TEXT    NOT NULL,
+            issue_key   TEXT    NOT NULL,
+            minutes     INTEGER NOT NULL,
+            start_time  TEXT    NOT NULL,
+            description TEXT    NOT NULL,
+            manual      INTEGER NOT NULL DEFAULT 0,
+            updated_ms  INTEGER NOT NULL,
+            PRIMARY KEY (day, issue_key)
+        );
+
+        CREATE TABLE assignments (
+            day         TEXT    NOT NULL,
+            app         TEXT    NOT NULL,
+            group_key   TEXT    NOT NULL,
+            issue_key   TEXT    NOT NULL,
+            created_ms  INTEGER NOT NULL,
+            PRIMARY KEY (day, app, group_key)
+        );
+
+        CREATE TABLE day_closures (
+            day             TEXT PRIMARY KEY,
+            closed_ms       INTEGER NOT NULL,
+            active_minutes  INTEGER NOT NULL,
+            worklog_minutes INTEGER NOT NULL,
+            summary         TEXT    NOT NULL
+        );
+        """,
     ];
 }
