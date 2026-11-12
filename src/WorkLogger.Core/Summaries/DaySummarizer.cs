@@ -72,6 +72,9 @@ public sealed record DaySummary(
 /// </summary>
 public static class DaySummarizer
 {
+    /// <summary>Bundan kısa issue'lar anlatıda ve listede yer almaz (ör. 20 sn'lik bir sekme geçişi).</summary>
+    public static readonly TimeSpan MinMention = TimeSpan.FromMinutes(1);
+
     public static DaySummary Summarize(DayAnalysis a, WorklogSettings worklog)
     {
         if (a.Active <= TimeSpan.Zero && a.Issues.Count == 0)
@@ -80,7 +83,7 @@ public static class DaySummarizer
         var headline = Headline(a);
         var narrative = Narrative(a);
         var items = a.Issues
-            .Where(i => i.Duration > TimeSpan.Zero || i.Commits.Count > 0)
+            .Where(i => i.Duration >= MinMention || i.Commits.Count > 0)
             .Select(i => Item(i, a.Active))
             .ToList();
         var highlights = Highlights(a, worklog);
@@ -90,7 +93,7 @@ public static class DaySummarizer
     private static string Headline(DayAnalysis a)
     {
         var parts = new List<string> { $"{DurationText.Format(a.Active)} aktif çalışma" };
-        var issueCount = a.Issues.Count(i => i.Duration > TimeSpan.Zero);
+        var issueCount = a.Issues.Count(i => i.Duration >= MinMention);
         if (issueCount > 0)
             parts.Add($"{issueCount} issue");
         if (a.Active > TimeSpan.Zero)
@@ -113,7 +116,7 @@ public static class DaySummarizer
             lines.Add(span);
         }
 
-        var worked = a.Issues.Where(i => i.Duration > TimeSpan.Zero).ToList();
+        var worked = a.Issues.Where(i => i.Duration >= MinMention).ToList();
         if (worked.Count > 0)
         {
             var top = worked[0];

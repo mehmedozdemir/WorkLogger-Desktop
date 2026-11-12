@@ -9,12 +9,23 @@ public enum ClassificationSource
     Title,
     Rule,
     Git,
+    Manual,
 }
 
 public readonly record struct IssueMatch(string? IssueKey, ClassificationSource Source)
 {
     public static readonly IssueMatch Unclassified = new(null, ClassificationSource.None);
     public bool IsClassified => IssueKey is not null;
+}
+
+/// <summary>Sınıflandırılmamış bir iş grubunun kimliği: süreç adı + başlıktan çıkarılan grup anahtarı.</summary>
+public readonly record struct GroupRef(string App, string GroupKey)
+{
+    /// <summary>Bu gruba uyan, "uygulama.exe pencere başlığı" metninde aranacak kural deseni.</summary>
+    public string ToRulePattern() =>
+        GroupKey.Length > 0
+            ? $"^{Regex.Escape(App)} .*{Regex.Escape(GroupKey)}"
+            : $"^{Regex.Escape(App)} ";
 }
 
 /// <summary>Pencere başlığından veya kullanıcı kurallarından issue key çıkarır.</summary>
@@ -88,6 +99,23 @@ public sealed class IssueClassifier
         _aliases.TryGetValue(app, out var alias)
             ? alias
             : app.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? app[..^4] : app;
+
+    /// <summary>Kullanıcı girdisini doğrular ve büyük harfe çevirir; geçerli bir key değilse null.</summary>
+    public string? NormalizeKey(string? input)
+    {
+        var text = input?.Trim().ToUpperInvariant();
+        if (string.IsNullOrEmpty(text))
+            return null;
+        try
+        {
+            var match = _keyPattern.Match(text);
+            return match.Success && match.Value.Length == text.Length ? text : null;
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            return null;
+        }
+    }
 
     public static string ProjectOf(string issueKey)
     {

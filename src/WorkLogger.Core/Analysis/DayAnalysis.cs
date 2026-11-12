@@ -49,6 +49,15 @@ public sealed class UnclassifiedActivity
     public TimeSpan Duration { get; internal set; }
     public DateTimeOffset? FirstStart { get; internal set; }
     public IReadOnlyList<TopicTime> Titles { get; internal set; } = [];
+
+    /// <summary>Elle atama yapılabilecek grup; "Diğer kısa işler" birleşik grubu için null.</summary>
+    public GroupRef? Group { get; init; }
+
+    /// <summary>Hemen öncesinde/sonrasında çalışılan issue'lara göre önerilen key.</summary>
+    public string? SuggestedKey { get; init; }
+
+    /// <summary>0-1 arası; önerinin işin ne kadarını kapsadığına dayanır.</summary>
+    public double SuggestionConfidence { get; init; }
 }
 
 public sealed class DayAnalysis

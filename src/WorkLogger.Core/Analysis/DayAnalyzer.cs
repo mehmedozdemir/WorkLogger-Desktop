@@ -34,11 +34,38 @@ public sealed class DayAnalyzer
 
     public IssueClassifier Classifier => _classifier;
 
-    public DayAnalysis Analyze(DateOnly day, IEnumerable<ActivitySegment> segments, IEnumerable<CommitInfo> commits)
+    /// <summary>Komşu issue önerisi için bir işin önceki/sonraki issue'ya en fazla bu kadar uzak olması gerekir.</summary>
+    public static readonly TimeSpan SuggestionReach = TimeSpan.FromMinutes(5);
+
+    public static (DateTimeOffset Start, DateTimeOffset End) DayBounds(DateOnly day)
     {
-        var dayStart = new DateTimeOffset(day.ToDateTime(TimeOnly.MinValue), TimeZoneInfo.Local.GetUtcOffset(day.ToDateTime(TimeOnly.MinValue)));
-        var nextDay = day.AddDays(1).ToDateTime(TimeOnly.MinValue);
-        var dayEnd = new DateTimeOffset(nextDay, TimeZoneInfo.Local.GetUtcOffset(nextDay));
+        var start = day.ToDateTime(TimeOnly.MinValue);
+        var end = day.AddDays(1).ToDateTime(TimeOnly.MinValue);
+        return (new DateTimeOffset(start, TimeZoneInfo.Local.GetUtcOffset(start)), new DateTimeOffset(end, TimeZoneInfo.Local.GetUtcOffset(end)));
+    }
+
+    /// <param name="assignments">O güne ait elle yapılmış atamalar (grup → issue key).</param>
+    public DayAnalysis Analyze(
+        DateOnly day,
+        IEnumerable<ActivitySegment> segments,
+        IEnumerable<CommitInfo> commits,
+        IReadOnlyDictionary<GroupRef, string>? assignments = null)
+    {
+        var (dayStart, dayEnd) = DayBounds(day);
+        return AnalyzeRange(day, dayStart, dayEnd, segments, commits, assignments);
+    }
+
+    /// <summary>Herhangi bir zaman aralığını analiz eder (ör. "son 2 saat").</summary>
+    public DayAnalysis AnalyzeRange(
+        DateOnly day,
+        DateTimeOffset from,
+        DateTimeOffset to,
+        IEnumerable<ActivitySegment> segments,
+        IEnumerable<CommitInfo> commits,
+        IReadOnlyDictionary<GroupRef, string>? assignments = null)
+    {
+        var dayStart = from;
+        var dayEnd = to;
 
         var clipped = segments
             .Select(s => s.ClipTo(dayStart, dayEnd))
@@ -48,10 +75,11 @@ public sealed class DayAnalyzer
 
         var result = new DayAnalysis { Day = day };
         var issues = new Dictionary<string, IssueBuilder>(StringComparer.Ordinal);
-        var unclassified = new Dictionary<string, UnclassifiedBuilder>(StringComparer.Ordinal);
+        var unclassified = new Dictionary<GroupRef, UnclassifiedBuilder>();
         var apps = new Dictionary<string, TimeSpan>(StringComparer.Ordinal);
         var hourly = new TimeSpan[24];
         var labelled = new List<(ActivitySegment Segment, string Label, string? Key, string AppLabel)>();
+        var groupsInOrder = new List<GroupRef?>();
 
         foreach (var seg in clipped)
         {
@@ -59,7 +87,7 @@ public sealed class DayAnalyzer
                 continue; // boşta süre aşağıda, çalışma aralığıyla sınırlanarak hesaplanır
 
             var appLabel = _classifier.AppLabel(seg.App);
-            var cls = _classifier.Classify(seg.App, seg.Title);
+            var cls = ClassifySegment(seg, assignments);
 
             result.Active += seg.Duration;
             result.FirstActivity ??= seg.Start;
@@ -74,17 +102,21 @@ public sealed class DayAnalyzer
                     issues[key] = builder = new IssueBuilder(key, cls.Source);
                 builder.Add(seg, appLabel);
                 labelled.Add((seg, key, key, appLabel));
+                groupsInOrder.Add(null);
             }
             else
             {
-                var group = TitleNormalizer.GroupKey(seg.Title);
-                var label = group.Length > 0 ? $"{appLabel} · {group}" : appLabel;
-                if (!unclassified.TryGetValue(label, out var builder))
-                    unclassified[label] = builder = new UnclassifiedBuilder(label, appLabel);
+                var group = new GroupRef(seg.App, TitleNormalizer.GroupKey(seg.Title));
+                var label = group.GroupKey.Length > 0 ? $"{appLabel} · {group.GroupKey}" : appLabel;
+                if (!unclassified.TryGetValue(group, out var builder))
+                    unclassified[group] = builder = new UnclassifiedBuilder(label, appLabel, group);
                 builder.Add(seg);
                 labelled.Add((seg, appLabel, null, appLabel));
+                groupsInOrder.Add(group);
             }
         }
+
+        SuggestFromNeighbours(labelled, groupsInOrder, unclassified);
 
         // Git: commit mesajı veya branch adındaki issue key'ler o issue'ya bağlanır.
         var dayCommits = commits.Where(c => c.Timestamp >= dayStart && c.Timestamp < dayEnd).OrderBy(c => c.Timestamp).ToList();
@@ -119,7 +151,7 @@ public sealed class DayAnalyzer
         // Zaman çizelgesi de aynı aralıkla sınırlanır.
         result.Timeline = BuildTimeline(result.FirstActivity is { } f && result.LastActivity is { } l
             ? clipped.Select(s => s.ClipTo(f, l)).OfType<ActivitySegment>().ToList()
-            : []);
+            : [], assignments);
 
         var units = WorkUnits(labelled);
         result.ContextSwitches = Math.Max(0, units.Count - 1);
@@ -176,7 +208,7 @@ public sealed class DayAnalyzer
                 list.Add(builder.Build());
                 continue;
             }
-            other ??= new UnclassifiedBuilder(OtherLabel, "");
+            other ??= new UnclassifiedBuilder(OtherLabel, "", null);
             other.Absorb(builder);
         }
         list.Sort((a, b) => b.Duration.CompareTo(a.Duration));
@@ -185,7 +217,56 @@ public sealed class DayAnalyzer
         return list;
     }
 
-    private List<TimelineBlock> BuildTimeline(List<ActivitySegment> segments)
+    private IssueMatch ClassifySegment(ActivitySegment seg, IReadOnlyDictionary<GroupRef, string>? assignments)
+    {
+        var match = _classifier.Classify(seg.App, seg.Title);
+        if (match.IsClassified || assignments is null || assignments.Count == 0)
+            return match;
+        return assignments.TryGetValue(new GroupRef(seg.App, TitleNormalizer.GroupKey(seg.Title)), out var key)
+            ? new IssueMatch(key, ClassificationSource.Manual)
+            : match;
+    }
+
+    /// <summary>
+    /// Sınıflandırılmamış her iş için, hemen öncesindeki ve sonrasındaki issue'lara süresi kadar ağırlık verir.
+    /// Örneğin PAY-1 üzerinde çalışırken araya giren Stack Overflow araması büyük olasılıkla PAY-1 içindir.
+    /// </summary>
+    private static void SuggestFromNeighbours(
+        List<(ActivitySegment Segment, string Label, string? Key, string AppLabel)> labelled,
+        List<GroupRef?> groups,
+        Dictionary<GroupRef, UnclassifiedBuilder> unclassified)
+    {
+        for (var i = 0; i < labelled.Count; i++)
+        {
+            if (groups[i] is not { } group)
+                continue;
+            var seg = labelled[i].Segment;
+            var builder = unclassified[group];
+
+            for (var j = i - 1; j >= 0; j--)
+            {
+                if (seg.Start - labelled[j].Segment.End > SuggestionReach)
+                    break;
+                if (labelled[j].Key is { } before)
+                {
+                    builder.Vote(before, seg.Duration);
+                    break;
+                }
+            }
+            for (var j = i + 1; j < labelled.Count; j++)
+            {
+                if (labelled[j].Segment.Start - seg.End > SuggestionReach)
+                    break;
+                if (labelled[j].Key is { } after)
+                {
+                    builder.Vote(after, seg.Duration);
+                    break;
+                }
+            }
+        }
+    }
+
+    private List<TimelineBlock> BuildTimeline(List<ActivitySegment> segments, IReadOnlyDictionary<GroupRef, string>? assignments)
     {
         var blocks = new List<TimelineBlock>();
         foreach (var seg in segments)
@@ -196,7 +277,7 @@ public sealed class DayAnalyzer
             {
                 block = new TimelineBlock(seg.Start, seg.End, TimelineKind.Idle, "Boşta", null, appLabel, "");
             }
-            else if (_classifier.Classify(seg.App, seg.Title).IssueKey is { } key)
+            else if (ClassifySegment(seg, assignments).IssueKey is { } key)
             {
                 block = new TimelineBlock(seg.Start, seg.End, TimelineKind.Issue, key, key, appLabel, seg.Title);
             }
@@ -313,12 +394,16 @@ public sealed class DayAnalyzer
         }
     }
 
-    private sealed class UnclassifiedBuilder(string label, string appLabel)
+    private sealed class UnclassifiedBuilder(string label, string appLabel, GroupRef? group)
     {
         private readonly Dictionary<string, TimeSpan> _titles = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, TimeSpan> _votes = new(StringComparer.Ordinal);
         private DateTimeOffset? _first;
 
         public TimeSpan Duration { get; private set; }
+
+        public void Vote(string issueKey, TimeSpan weight) =>
+            _votes[issueKey] = _votes.GetValueOrDefault(issueKey) + weight;
 
         public void Add(ActivitySegment seg)
         {
@@ -339,13 +424,21 @@ public sealed class DayAnalyzer
                 _first = f;
         }
 
-        public UnclassifiedActivity Build() => new()
+        public UnclassifiedActivity Build()
         {
-            Label = label,
-            AppLabel = appLabel,
-            Duration = Duration,
-            FirstStart = _first,
-            Titles = TopN(_titles, 5, (k, v) => new TopicTime(k, v)),
-        };
+            // Öneri: en çok oy alan komşu issue. Toplam oy, iki yanı da sayıldığı için sürenin iki katına çıkabilir.
+            var best = _votes.Count > 0 ? _votes.MaxBy(kv => kv.Value) : default;
+            return new UnclassifiedActivity
+            {
+                Label = label,
+                AppLabel = appLabel,
+                Group = group,
+                Duration = Duration,
+                FirstStart = _first,
+                Titles = TopN(_titles, 5, (k, v) => new TopicTime(k, v)),
+                SuggestedKey = best.Key,
+                SuggestionConfidence = best.Key is null || Duration <= TimeSpan.Zero ? 0 : Math.Min(1, best.Value / Duration / 2 + 0.25),
+            };
+        }
     }
 }

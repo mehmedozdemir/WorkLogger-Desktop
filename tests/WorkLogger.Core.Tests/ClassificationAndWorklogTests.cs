@@ -58,6 +58,18 @@ public class ClassificationTests
     }
 }
 
+public class DurationTextTests
+{
+    [Theory]
+    [InlineData(0, "0 dk")]
+    [InlineData(20, "<1 dk")]
+    [InlineData(45 * 60, "45 dk")]
+    [InlineData(125 * 60, "2 sa 05 dk")]
+    [InlineData(180 * 60, "3 sa")]
+    public void Formats_durations(int seconds, string expected) =>
+        Assert.Equal(expected, Formatting.DurationText.Format(TimeSpan.FromSeconds(seconds)));
+}
+
 public class WorklogPlannerTests
 {
     [Theory]

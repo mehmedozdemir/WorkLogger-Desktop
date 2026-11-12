@@ -6,10 +6,12 @@ public static class DurationText
 {
     public static readonly CultureInfo Turkish = CultureInfo.GetCultureInfo("tr-TR");
 
-    /// <summary>"2 sa 05 dk", "45 dk", "0 dk".</summary>
+    /// <summary>"2 sa 05 dk", "45 dk", "&lt;1 dk", "0 dk".</summary>
     public static string Format(TimeSpan span)
     {
         var minutes = (int)Math.Round(span.TotalMinutes, MidpointRounding.AwayFromZero);
+        if (minutes == 0 && span > TimeSpan.Zero)
+            return "<1 dk";
         if (minutes < 60)
             return $"{minutes} dk";
         var hours = minutes / 60;
