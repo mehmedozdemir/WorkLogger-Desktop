@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Etiket ile proje sürümünü karşılaştır
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}".TrimStart('v')
+          [xml]$props = Get-Content Directory.Build.props
+          $version = ($props.Project.PropertyGroup | Where-Object { $_.Version }).Version
+          if ($tag -ne $version) { throw "Etiket ($tag) ile Directory.Build.props sürümü ($version) farklı." }
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Test
+        run: dotnet test -c Release
+
+      - name: Yayınla (self-contained, tek dosya)
+        run: >
+          dotnet publish src/WorkLogger.Desktop -c Release -r win-x64 --self-contained
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish
+
+      - name: Paketle
+        shell: pwsh
+        run: |
+          Remove-Item publish\*.pdb -ErrorAction SilentlyContinue
+          Copy-Item README.md, LICENSE, CHANGELOG.md publish\
+          Compress-Archive -Path publish\* -DestinationPath "WorkLogger-$env:VERSION-win-x64.zip"
+
+      - name: Sürüm notlarını CHANGELOG'dan çıkar
+        shell: pwsh
+        run: |
+          $text = Get-Content CHANGELOG.md -Raw
+          $pattern = "(?ms)^## \[$([regex]::Escape($env:VERSION))\][^\n]*\n(.*?)(?=^## \[|^\[)"
+          $m = [regex]::Match($text, $pattern)
+          $notes = if ($m.Success) { $m.Groups[1].Value.Trim() } else { "Sürüm $env:VERSION" }
+          Set-Content -Path release-notes.md -Value $notes -Encoding utf8
+
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" "WorkLogger-${{ env.VERSION }}-win-x64.zip" --title "WorkLogger ${{ env.VERSION }}" --notes-file release-notes.md
