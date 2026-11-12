@@ -14,8 +14,8 @@ okunur bir özete ve worklog önerilerine dönüştüren masaüstü uygulaması.
 - **Veri sizde kalır.** Her şey `%LOCALAPPDATA%\WorkLogger` altındaki SQLite dosyasında tutulur.
   Uygulama ağa veri göndermez.
 
-> Durum: **v0.1.0**, ilk sürüm. Jira/Tempo'ya doğrudan gönderim henüz yok; worklog tablosu
-> panoya kopyalanıp yapıştırılır. Yol haritası için [docs/roadmap.md](docs/roadmap.md).
+> Durum: **v0.2.0**. Jira/Tempo'ya doğrudan gönderim henüz yok; worklog tablosu panoya
+> kopyalanıp yapıştırılır. Yol haritası için [docs/roadmap.md](docs/roadmap.md).
 
 ## Kurulum
 
@@ -39,13 +39,25 @@ menüden **İzlemeyi durdur ve çık**'ı seçin ve klasörü silin. Verileri de
 
 | Ekran | Ne yapar |
 | --- | --- |
-| **Gün** | Aktif süre, issue'ya eşlenme oranı, odak süresi ve günlük hedef kartları. Zaman çizelgesi, issue ve uygulama dağılımı, gün sonu özeti, worklog önerileri, sınıflandırılmamış işler, saatlik dağılım ve commit'ler. Günler arasında ‹ › ile gezilir. |
+| **Gün** | Aktif süre, issue'ya eşlenme oranı, odak süresi ve günlük hedef kartları. Zaman çizelgesi, issue ve uygulama dağılımı, gün sonu özeti ve **Günü kapat**, kalıcı worklog tablosu, sınıflandırılmamış işler (**Ata** ile issue'ya bağlama), saatlik dağılım ve commit'ler. Günler arasında ‹ › ile gezilir. |
+| **Ne yaptım?** | Son 1/2/4 saatin ya da bugünün kısa özeti. Gün ekranından ya da tepsiden açılır. |
 | **Geçmiş ve raporlar** | 7/30/90 gün, bu yıl veya tüm geçmiş. Günlük süre grafiği (bir çubuğa tıklayınca o gün açılır), çalışma takvimi, projeler, en çok zaman alan issue'lar, haftanın günü × saat ritmi, uygulamalar ve CSV dışa aktarma. |
 | **Ayarlar** | Gün sonu saati, günlük hedef, boşta eşiği, mesai saatleri, sınıflandırma kuralları, yuvarlama, git depoları ve veri. |
 | **Tepsi** | Pencereyi açma, bugünün özeti, duraklat/sürdür, kapatma. |
 
 Pencereyi kapatmak uygulamayı kapatmaz, yalnızca tepsiye küçültür. İzleme ayrı bir süreçte
 sürer. Gün sonu saatinde (varsayılan 18:00) pencere günün özetiyle kendiliğinden açılır.
+
+### Gün sonu akışı
+
+1. **Sınıflandırılmamış işler** listesinde bir işin yanındaki **Ata** düğmesine basın. Öneri
+   (işin hemen öncesinde ya da sonrasında çalıştığınız issue) kutuya hazır gelir.
+   **Bundan sonra da bu işe ata** seçilirse atama kurala dönüşür. Kuralın son 30 günde ne kadar
+   süreyi yakalayacağı da gösterilir.
+2. **Worklog önerileri** tablosunda süreleri ve açıklamaları düzeltin; değişiklikler otomatik
+   kaydedilir. **Hedefe dengele** süreleri günlük hedefe orantılı dağıtır. Tabloyu kopyalayıp
+   Tempo'ya ya da Excel'e yapıştırın.
+3. **Günü kapat** ile günü tamamlayın. Kapatılmamış günler, Gün ekranının üstünde hatırlatılır.
 
 ### Sınıflandırma kuralları
 

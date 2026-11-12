@@ -88,6 +88,12 @@ gün anahtarı yerel tarih olarak saklanır.
 | `segments` | Ham izleme verisi (`source`: `agent` / `python-import`) |
 | `commits` | Git commit'leri, sha ile tekil; dosya, ekleme ve silme sayıları |
 | `agent_state` | Canlı durum ve komutlar |
+| `worklog_drafts` | Kullanıcının worklog düzenlemeleri (gün + issue); öneriyi ezer |
+| `assignments` | Gün bazında elle atamalar (süreç + başlık grubu → issue) |
+| `day_closures` | Kapatılan günler: zaman, aktif ve worklog toplamı, özet metni |
+
+Ham izleme verisi (`segments`) kullanıcı düzenlemeleriyle asla değiştirilmez. Atamalar ve
+taslaklar analiz sırasında ham verinin üstüne uygulanır; geri almak her zaman mümkündür.
 
 Ayarlar `settings.json` dosyasında durur. Kaydetmeden önce doğrulanır; bozuk dosya varsa
 varsayılanlarla devam edilir ve kullanıcı uyarılır.

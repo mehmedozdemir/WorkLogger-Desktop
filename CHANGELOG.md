@@ -6,6 +6,34 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr-TR/1.1.0/) esaslıdır; 
 
 ## [Yayınlanmadı]
 
+## [0.2.0] - 2026-11-12
+
+Gün sonu akışı: kalıcı düzenlemeler, tek tıkla atama, günü kapatma.
+
+### Eklendi
+- Sınıflandırılmamış bir işi tek tıkla bir issue'ya atama. Akıllı öneri: işin hemen öncesinde
+  ya da sonrasında çalışılan issue önerilir. Günün issue'ları hızlı seçim düğmesi olarak gelir.
+- "Bundan sonra da bu işe ata" seçeneği atamayı kalıcı bir kurala çevirir. Kuralın son 30 günde
+  ne kadar süreyi yakalayacağı önceden gösterilir.
+- O güne ait elle atamalar listelenir ve geri alınabilir.
+- Worklog düzenlemeleri (süre, başlangıç, açıklama) otomatik ve kalıcı olarak kaydedilir.
+  Düzenlenen satırlar işaretlenir. "Sıfırla" taslakları silip önerileri yeniden hesaplar.
+- İzlenmemiş işler için worklog tablosuna elle satır ekleme ve silme.
+- Günü kapatma: özet ve worklog toplamı arşivlenir. Kapatılan gün yeniden açılabilir.
+- Hatırlatma: son 7 günde çalışılmış ama kapatılmamış bir iş günü varsa Gün ekranında bant
+  görünür.
+- "Ne yaptım?" penceresi: son 1/2/4 saatin ya da bugünün kısa özeti. Tepsi menüsünden de açılır.
+
+### Değişti
+- Veritabanı şeması 2. sürüme geçti (`worklog_drafts`, `assignments`, `day_closures`).
+  Göç otomatik yapılır.
+- 1 dakikanın altındaki süreler "0 dk" yerine "<1 dk" olarak gösterilir. Bu kadar kısa
+  issue'lar özette anılmaz.
+
+### Düzeltildi
+- Eski Tempo Tracker verisi içe aktarılırken, WorkLogger'ın ilk kaydından sonraki dönem
+  alınmaz. İki izleyici aynı anda çalıştıysa süreler artık iki kez sayılmıyor.
+
 ## [0.1.0] - 2026-11-12
 
 İlk sürüm. Python tabanlı Tempo Tracker'ın .NET 10 + Avalonia ile baştan yazılmış hâli.
@@ -38,5 +66,6 @@ Biçim [Keep a Changelog](https://keepachangelog.com/tr-TR/1.1.0/) esaslıdır; 
 - 30 saniyeden kısa segmentler atılmıyor; toplam süre kaybolmuyor.
 - Tarayıcı tabanlı rapor ve yerel HTTP sunucusu kaldırıldı (XSS ve token sızıntısı riski yok).
 
-[Yayınlanmadı]: https://github.com/mehmedozdemir/WorkLogger-Desktop/compare/v0.1.0...HEAD
+[Yayınlanmadı]: https://github.com/mehmedozdemir/WorkLogger-Desktop/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/mehmedozdemir/WorkLogger-Desktop/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/mehmedozdemir/WorkLogger-Desktop/releases/tag/v0.1.0

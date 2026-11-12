@@ -2,13 +2,15 @@
 
 Önceliklendirme kullanıcı geri bildirimine göre değişebilir.
 
-## 0.2 — Gün sonu akışı ve kalıcı düzenlemeler
-- Worklog düzenlemelerinin kalıcı saklanması (`worklog_drafts` tablosu)
-- Sınıflandırılmamış bir bloğu tek tıkla bir issue'ya atama ve "bundan sonra hep böyle" diyerek
-  kural oluşturma
-- Kurallar ekranı: son 30 güne karşı canlı önizleme
-- "Son 2 saat" gibi aralık özetleri (tepsiden)
-- Günü "kapatma" ve kapanmamış günler için hatırlatma
+## 0.2 — Gün sonu akışı ✔ (yayınlandı)
+- Kalıcı worklog taslakları, elle satır ekleme
+- Tek tıkla atama, komşu issue önerisi, atamadan kural oluşturma (30 günlük önizleme)
+- "Ne yaptım?" aralık özetleri
+- Günü kapatma ve kapanmamış gün hatırlatması
+
+## 0.2.x — küçük iyileştirmeler
+- Ayarlar'da ayrı bir Kurallar ekranı: listeleme, düzenleme, son 30 güne karşı canlı önizleme
+- Geçmiş takviminde kapatılmış günlerin işaretlenmesi
 
 ## 0.3 — Jira/Tempo entegrasyonu (isteğe bağlı, varsayılan kapalı)
 - Kurum içi Jira Server/Data Center: kişisel erişim token'ı ile issue doğrulama ve başlık çekme
