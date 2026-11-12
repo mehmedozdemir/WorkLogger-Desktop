@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Saf alan modeli ve analiz motoru: UI, veritabani ve isletim sistemi bagimliligi yok. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="WorkLogger.Core.Tests" />
+  </ItemGroup>
+</Project>
