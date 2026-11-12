@@ -1,0 +1,13 @@
+bin/
+obj/
+artifacts/
+publish/
+TestResults/
+*.user
+*.suo
+.vs/
+.idea/
+*.DotSettings.user
+*.swp
+.DS_Store
+Thumbs.db
