@@ -1,0 +1,334 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:WorkLogger.Desktop.ViewModels"
+             xmlns:c="using:WorkLogger.Desktop.Controls"
+             x:Class="WorkLogger.Desktop.Views.DayView"
+             x:DataType="vm:DayViewModel">
+  <Grid>
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Margin="32,26,32,40" Spacing="18" MaxWidth="1440">
+
+        <!-- Başlık -->
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Spacing="2">
+            <TextBlock Classes="h1" Text="{Binding Title}" />
+            <TextBlock Classes="caption" FontSize="13" Text="{Binding Subtitle}" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <ProgressBar IsIndeterminate="True" Width="60" Height="3" IsVisible="{Binding IsLoading}" Margin="0,0,8,0" />
+            <Button Classes="icon" Command="{Binding PreviousDayCommand}" ToolTip.Tip="Önceki gün">
+              <TextBlock Classes="glyph" FontSize="12" Text="&#xE76B;" />
+            </Button>
+            <Button Classes="ghost" Content="Bugün" Command="{Binding GoTodayCommand}" />
+            <Button Classes="icon" Command="{Binding NextDayCommand}" ToolTip.Tip="Sonraki gün">
+              <TextBlock Classes="glyph" FontSize="12" Text="&#xE76C;" />
+            </Button>
+            <Button Classes="icon" Command="{Binding RefreshCommand}" ToolTip.Tip="Yenile">
+              <TextBlock Classes="glyph" FontSize="13" Text="&#xE72C;" />
+            </Button>
+          </StackPanel>
+        </Grid>
+
+        <Border Classes="card" Background="{DynamicResource WarningSoftBrush}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <TextBlock Text="{Binding Error}" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" />
+        </Border>
+
+        <!-- KPI kartları -->
+        <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="16">
+          <Border Classes="card">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="overline" Text="AKTİF SÜRE" />
+              <TextBlock Classes="kpi" Text="{Binding ActiveText}" />
+              <TextBlock Classes="caption" Text="{Binding ActiveDetail}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="1" Classes="card">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="overline" Text="ISSUE'YA EŞLENEN" />
+              <TextBlock Classes="kpi" Text="{Binding ClassifiedText}" />
+              <TextBlock Classes="caption" Text="{Binding ClassifiedDetail}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="2" Classes="card">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="overline" Text="ODAK" />
+              <TextBlock Classes="kpi" Text="{Binding FocusText}" />
+              <TextBlock Classes="caption" Text="{Binding FocusDetail}" TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="3" Classes="card">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="overline" Text="GÜNLÜK HEDEF" />
+              <TextBlock Classes="kpi" FontSize="24" Margin="0,2,0,2" Text="{Binding TargetText}" />
+              <ProgressBar Value="{Binding TargetProgress}" Maximum="100" Height="6" MinHeight="6" />
+              <TextBlock Classes="caption" Text="{Binding TargetDetail}" />
+            </StackPanel>
+          </Border>
+        </Grid>
+
+        <!-- Kayıt yok -->
+        <Border Classes="card" IsVisible="{Binding !HasData}" Padding="28">
+          <StackPanel Spacing="6" HorizontalAlignment="Center">
+            <TextBlock Classes="glyph" FontSize="28" Text="&#xE823;" HorizontalAlignment="Center" Foreground="{DynamicResource TextMutedBrush}" />
+            <TextBlock Classes="h2" Text="Bu gün için kayıt yok" HorizontalAlignment="Center" />
+            <TextBlock Classes="caption" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="460"
+                       Text="İzleyici çalıştıkça pencere değişimleri buraya düşer. Eski Tempo Tracker verisini Ayarlar &gt; Veri bölümünden içe aktarabilirsiniz." />
+          </StackPanel>
+        </Border>
+
+        <!-- Zaman çizelgesi -->
+        <Border Classes="card" IsVisible="{Binding HasData}">
+          <StackPanel Spacing="14">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Classes="h2" Text="Zaman çizelgesi" />
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Border Width="10" Height="10" CornerRadius="3" Background="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+                  <TextBlock Classes="caption" Text="Issue" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Border Width="10" Height="10" CornerRadius="3" Background="{DynamicResource UnclassifiedBrush}" VerticalAlignment="Center" />
+                  <TextBlock Classes="caption" Text="Sınıflandırılmamış" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Border Width="10" Height="10" CornerRadius="3" Background="{DynamicResource IdleBrush}" VerticalAlignment="Center" />
+                  <TextBlock Classes="caption" Text="Boşta" />
+                </StackPanel>
+              </StackPanel>
+            </Grid>
+            <c:TimelineBar Blocks="{Binding Timeline}" RangeStart="{Binding RangeStart}" RangeEnd="{Binding RangeEnd}" />
+          </StackPanel>
+        </Border>
+
+        <!-- Issue'lar + uygulamalar -->
+        <Grid ColumnDefinitions="3*,2*" ColumnSpacing="16" IsVisible="{Binding HasData}">
+          <Border Classes="card">
+            <StackPanel Spacing="12">
+              <TextBlock Classes="h2" Text="Issue'lar" />
+              <TextBlock Classes="caption" IsVisible="{Binding !HasIssues}" TextWrapping="Wrap"
+                         Text="Pencere başlıklarında issue key bulunamadı. Ayarlar &gt; Sınıflandırma bölümünden kural ekleyebilirsiniz." />
+              <ItemsControl ItemsSource="{Binding Issues}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Spacing="12" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:IssueRow">
+                    <Grid ColumnDefinitions="Auto,104,*,84" RowDefinitions="Auto,Auto" ColumnSpacing="10">
+                      <Ellipse Width="10" Height="10" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Classes="key" Text="{Binding Key}" VerticalAlignment="Center" />
+                      <c:ShareBar Grid.Column="2" Value="{Binding Share}" BarBrush="{Binding Brush}" Height="6" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="3" Classes="num" Text="{Binding DurationText}" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                      <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Spacing="1" Margin="0,3,0,0">
+                        <TextBlock Classes="body" FontSize="12.5" LineHeight="18" Text="{Binding Topic}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                        <TextBlock Classes="caption" Text="{Binding Meta}" TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+
+          <Border Grid.Column="1" Classes="card">
+            <StackPanel Spacing="12">
+              <TextBlock Classes="h2" Text="Uygulamalar" />
+              <Grid ColumnDefinitions="168,*" ColumnSpacing="18">
+                <c:DonutChart Width="168" Height="168" Slices="{Binding AppSlices}" CenterText="{Binding AppsCenter}" CenterCaption="uygulama" Thickness="16" />
+                <ItemsControl Grid.Column="1" ItemsSource="{Binding Apps}" VerticalAlignment="Center">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Spacing="9" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AppRow">
+                      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                        <Border Width="9" Height="9" CornerRadius="2.5" Background="{Binding Brush}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12.5" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="2" Classes="caption num" Text="{Binding DurationText}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Grid>
+            </StackPanel>
+          </Border>
+        </Grid>
+
+        <!-- Gün sonu özeti -->
+        <Border Classes="card" IsVisible="{Binding HasData}">
+          <StackPanel Spacing="12">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="h2" Text="Gün sonu özeti" />
+                <TextBlock Classes="caption" Text="Kayıtlardan kural tabanlı olarak üretilir; yapay zekâ kullanılmaz." />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                <Button Classes="ghost" Command="{Binding CopyStandupCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="glyph" FontSize="12" Text="&#xE8BD;" />
+                    <TextBlock Text="Standup" />
+                  </StackPanel>
+                </Button>
+                <Button Classes="ghost" Command="{Binding CopySummaryCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="glyph" FontSize="12" Text="&#xE8C8;" />
+                    <TextBlock Text="Özeti kopyala" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Grid>
+            <TextBlock Text="{Binding Headline}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{Binding Narrative}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="6" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <TextBlock Classes="body" Text="{Binding}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <ItemsControl ItemsSource="{Binding Highlights}" IsVisible="{Binding HasHighlights}" Margin="0,4,0,0">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel ItemSpacing="8" LineSpacing="8" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:HighlightRow">
+                  <Border Classes="pill" Classes.positive="{Binding IsPositive}" Classes.warning="{Binding IsWarning}">
+                    <TextBlock Text="{Binding Text}" FontSize="12.5" TextWrapping="Wrap" />
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <!-- Worklog önerileri -->
+        <Border Classes="card" IsVisible="{Binding HasWorklogs}">
+          <StackPanel Spacing="12">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="h2" Text="Worklog önerileri" />
+                <TextBlock Classes="caption" Text="Süreleri ve açıklamaları düzenleyip tabloyu Tempo/Jira ya da Excel'e yapıştırabilirsiniz." />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                <Button Classes="ghost" Content="Hedefe dengele" Command="{Binding BalanceWorklogsCommand}"
+                        ToolTip.Tip="Süreleri oranlarını koruyarak günlük hedefe dağıtır" />
+                <Button Classes="ghost" Content="Sıfırla" Command="{Binding ResetWorklogsCommand}" />
+                <Button Classes="accent" Command="{Binding CopyWorklogsCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="glyph" FontSize="12" Text="&#xE8C8;" />
+                    <TextBlock Text="Tabloyu kopyala" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Grid>
+
+            <Grid ColumnDefinitions="150,90,130,90,*" ColumnSpacing="12" Margin="0,4,0,0">
+              <TextBlock Classes="overline" Text="ISSUE" />
+              <TextBlock Grid.Column="1" Classes="overline" Text="İZLENEN" />
+              <TextBlock Grid.Column="2" Classes="overline" Text="SÜRE (DK)" />
+              <TextBlock Grid.Column="3" Classes="overline" Text="BAŞLANGIÇ" />
+              <TextBlock Grid.Column="4" Classes="overline" Text="AÇIKLAMA" />
+            </Grid>
+            <Border Classes="divider" />
+            <ItemsControl ItemsSource="{Binding Worklogs}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="8" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:WorklogRow">
+                  <Grid ColumnDefinitions="150,90,130,90,*" ColumnSpacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                      <Ellipse Width="9" Height="9" Fill="{Binding Brush}" />
+                      <TextBlock Classes="key" Text="{Binding IssueKey}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Classes="caption num" Text="{Binding TrackedText}" VerticalAlignment="Center" />
+                    <NumericUpDown Grid.Column="2" Value="{Binding Minutes}" Increment="15" Minimum="0" Maximum="1440" FormatString="0" />
+                    <TextBox Grid.Column="3" Text="{Binding Start}" />
+                    <TextBox Grid.Column="4" Text="{Binding Description}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Classes="caption" Text="{Binding WorklogTotal}" HorizontalAlignment="Right" />
+          </StackPanel>
+        </Border>
+
+        <!-- Sınıflandırılmamış + saatlik dağılım -->
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="16" IsVisible="{Binding HasData}">
+          <Border Classes="card">
+            <StackPanel Spacing="12">
+              <TextBlock Classes="h2" Text="Sınıflandırılmamış işler" />
+              <TextBlock Classes="caption" IsVisible="{Binding !HasUnclassified}" Text="Tüm aktif süre bir issue'ya eşlendi." />
+              <ItemsControl ItemsSource="{Binding Unclassified}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Spacing="10" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:UnclassifiedRow">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+                      <TextBlock Text="{Binding Label}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Grid.Column="1" Classes="num" Text="{Binding DurationText}" FontSize="13" FontWeight="SemiBold" />
+                      <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="caption" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+          <Border Grid.Column="1" Classes="card">
+            <StackPanel Spacing="12">
+              <TextBlock Classes="h2" Text="Saatlik dağılım" />
+              <c:BarChart Items="{Binding Hourly}" Height="190" Unit=" dk" LabelEvery="2" />
+            </StackPanel>
+          </Border>
+        </Grid>
+
+        <!-- Commit'ler -->
+        <Border Classes="card" IsVisible="{Binding HasCommits}">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h2" Text="Commit'ler" />
+            <ItemsControl ItemsSource="{Binding Commits}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="10" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:CommitRow">
+                  <Grid ColumnDefinitions="52,170,*,Auto" ColumnSpacing="12">
+                    <TextBlock Classes="caption num" Text="{Binding Time}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1">
+                      <TextBlock Text="{Binding Repo}" FontSize="12.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                      <TextBlock Classes="caption" Text="{Binding Branch}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="2" Text="{Binding Message}" FontSize="13" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="3" Classes="caption num" Text="{Binding Stats}" VerticalAlignment="Center" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Bildirim -->
+    <Border VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,24" Padding="16,10" CornerRadius="10"
+            Background="{DynamicResource TextPrimaryBrush}" IsVisible="{Binding Toast, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <TextBlock Text="{Binding Toast}" Foreground="{DynamicResource SurfaceBrush}" FontSize="13" />
+    </Border>
+  </Grid>
+</UserControl>

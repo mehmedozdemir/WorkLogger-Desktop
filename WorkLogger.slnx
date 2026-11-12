@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WorkLogger.Agent/WorkLogger.Agent.csproj" />
+    <Project Path="src/WorkLogger.Core/WorkLogger.Core.csproj" />
+    <Project Path="src/WorkLogger.Desktop/WorkLogger.Desktop.csproj" />
+    <Project Path="src/WorkLogger.Infrastructure/WorkLogger.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WorkLogger.Core.Tests/WorkLogger.Core.Tests.csproj" />
+    <Project Path="tests/WorkLogger.Infrastructure.Tests/WorkLogger.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

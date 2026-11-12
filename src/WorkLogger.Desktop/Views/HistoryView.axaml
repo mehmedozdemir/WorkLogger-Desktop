@@ -1,0 +1,183 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:WorkLogger.Desktop.ViewModels"
+             xmlns:c="using:WorkLogger.Desktop.Controls"
+             x:Class="WorkLogger.Desktop.Views.HistoryView"
+             x:DataType="vm:HistoryViewModel">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="32,26,32,40" Spacing="18" MaxWidth="1440">
+
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Spacing="2">
+          <TextBlock Classes="h1" Text="Geçmiş ve raporlar" />
+          <TextBlock Classes="caption" FontSize="13" Text="{Binding RangeText}" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <ProgressBar IsIndeterminate="True" Width="60" Height="3" IsVisible="{Binding IsLoading}" />
+          <Border Background="{DynamicResource TrackBrush}" CornerRadius="9" Padding="3">
+            <StackPanel Orientation="Horizontal" Spacing="2">
+              <Button Classes="segment" Classes.selected="{Binding IsWeek}" Content="7 gün"
+                      Command="{Binding SelectRangeCommand}" CommandParameter="{x:Static vm:HistoryRange.Week}" />
+              <Button Classes="segment" Classes.selected="{Binding IsMonth}" Content="30 gün"
+                      Command="{Binding SelectRangeCommand}" CommandParameter="{x:Static vm:HistoryRange.Month}" />
+              <Button Classes="segment" Classes.selected="{Binding IsQuarter}" Content="90 gün"
+                      Command="{Binding SelectRangeCommand}" CommandParameter="{x:Static vm:HistoryRange.Quarter}" />
+              <Button Classes="segment" Classes.selected="{Binding IsYear}" Content="Bu yıl"
+                      Command="{Binding SelectRangeCommand}" CommandParameter="{x:Static vm:HistoryRange.Year}" />
+              <Button Classes="segment" Classes.selected="{Binding IsAll}" Content="Tümü"
+                      Command="{Binding SelectRangeCommand}" CommandParameter="{x:Static vm:HistoryRange.All}" />
+            </StackPanel>
+          </Border>
+          <Button Classes="ghost" Command="{Binding ExportCsvCommand}" ToolTip.Tip="Günlük ve issue bazlı toplamları CSV olarak dışa aktar">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <TextBlock Classes="glyph" FontSize="12" Text="&#xEDE1;" />
+              <TextBlock Text="CSV" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </Grid>
+
+      <Border Classes="card" Padding="14,10" IsVisible="{Binding Message, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <TextBlock Text="{Binding Message}" Classes="caption" TextWrapping="Wrap" />
+      </Border>
+
+      <!-- KPI -->
+      <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="16">
+        <Border Classes="card">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="overline" Text="TOPLAM AKTİF" />
+            <TextBlock Classes="kpi" Text="{Binding TotalText}" />
+            <TextBlock Classes="caption" Text="{Binding TotalDetail}" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="card">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="overline" Text="GÜNLÜK ORTALAMA" />
+            <TextBlock Classes="kpi" Text="{Binding AverageText}" />
+            <TextBlock Classes="caption" Text="{Binding AverageDetail}" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="2" Classes="card">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="overline" Text="ISSUE'YA EŞLENEN" />
+            <TextBlock Classes="kpi" Text="{Binding ClassifiedText}" />
+            <TextBlock Classes="caption" Text="{Binding ClassifiedDetail}" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="3" Classes="card">
+          <StackPanel Spacing="6">
+            <TextBlock Classes="overline" Text="ODAK" />
+            <TextBlock Classes="kpi" Text="{Binding FocusText}" />
+            <TextBlock Classes="caption" Text="{Binding FocusDetail}" />
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- Günlük süre -->
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Spacing="2">
+              <TextBlock Classes="h2" Text="Günlük aktif süre" />
+              <TextBlock Classes="caption" Text="Koyu: issue'ya eşlenen · açık: diğer. Bir güne tıklayarak ayrıntısını açın." />
+            </StackPanel>
+          </Grid>
+          <c:BarChart Items="{Binding DailyBars}" Target="{Binding TargetHours}" Unit=" sa" LabelEvery="{Binding LabelEvery}"
+                      Height="230" ItemCommand="{Binding OpenDayCommand}" />
+        </StackPanel>
+      </Border>
+
+      <!-- Takvim -->
+      <Border Classes="card">
+        <StackPanel Spacing="12">
+          <TextBlock Classes="h2" Text="Çalışma takvimi" />
+          <c:CalendarHeatmap Cells="{Binding HeatCells}" ItemCommand="{Binding OpenDayCommand}" />
+        </StackPanel>
+      </Border>
+
+      <!-- Projeler + issue'lar -->
+      <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h2" Text="Projeler" />
+            <TextBlock Classes="caption" Text="Bu aralıkta issue'ya eşlenen çalışma yok." IsVisible="{Binding !Projects.Count}" />
+            <ItemsControl ItemsSource="{Binding Projects}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="12" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ProjectRow">
+                  <Grid ColumnDefinitions="90,*,84" RowDefinitions="Auto,Auto" ColumnSpacing="10">
+                    <TextBlock Classes="key" Text="{Binding Project}" />
+                    <c:ShareBar Grid.Column="1" Value="{Binding Share}" BarBrush="{Binding Brush}" Height="6" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Classes="num" Text="{Binding DurationText}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Classes="caption" Text="{Binding Detail}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="card">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h2" Text="En çok zaman alan issue'lar" />
+            <ItemsControl ItemsSource="{Binding TopIssues}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="12" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:IssueTotalRow">
+                  <Grid ColumnDefinitions="Auto,100,*,84" RowDefinitions="Auto,Auto" ColumnSpacing="10">
+                    <Ellipse Width="9" Height="9" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Classes="key" Text="{Binding Key}" />
+                    <c:ShareBar Grid.Column="2" Value="{Binding Share}" BarBrush="{Binding Brush}" Height="6" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="3" Classes="num" Text="{Binding DurationText}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Classes="caption" Text="{Binding Detail}" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- Haftalık ritim + uygulamalar -->
+      <Grid ColumnDefinitions="3*,2*" ColumnSpacing="16">
+        <Border Classes="card">
+          <StackPanel Spacing="12">
+            <StackPanel Spacing="2">
+              <TextBlock Classes="h2" Text="Çalışma ritmi" />
+              <TextBlock Classes="caption" Text="Haftanın günü × saat; renk yoğunluğu toplam aktif süreyi gösterir." />
+            </StackPanel>
+            <c:MatrixHeatmap Values="{Binding WeekHour}" Height="196" />
+          </StackPanel>
+        </Border>
+        <Border Grid.Column="1" Classes="card">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h2" Text="Uygulamalar" />
+            <ItemsControl ItemsSource="{Binding Apps}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="11" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:AppRow">
+                  <Grid ColumnDefinitions="130,*,80" ColumnSpacing="10">
+                    <TextBlock Text="{Binding Name}" FontSize="12.5" TextTrimming="CharacterEllipsis" />
+                    <c:ShareBar Grid.Column="1" Value="{Binding Share}" BarBrush="{Binding Brush}" Height="6" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Classes="caption num" Text="{Binding DurationText}" HorizontalAlignment="Right" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

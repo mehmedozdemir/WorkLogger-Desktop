@@ -1,0 +1,179 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:WorkLogger.Desktop.ViewModels"
+             x:Class="WorkLogger.Desktop.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.label">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+    <Style Selector="TextBox.multi">
+      <Setter Property="AcceptsReturn" Value="True" />
+      <Setter Property="TextWrapping" Value="NoWrap" />
+      <Setter Property="MinHeight" Value="84" />
+      <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, monospace" />
+      <Setter Property="FontSize" Value="12.5" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel>
+    <!-- Alt eylem çubuğu -->
+    <Border DockPanel.Dock="Bottom" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="0,1,0,0" Padding="32,12">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="13"
+                   Foreground="{DynamicResource PositiveBrush}" IsVisible="{Binding !IsError}" />
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" VerticalAlignment="Center" FontSize="13"
+                   Foreground="{DynamicResource WarningBrush}" IsVisible="{Binding IsError}" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <Button Classes="ghost" Content="Geri al" Command="{Binding RevertCommand}" />
+          <Button Classes="accent" Content="Kaydet" Command="{Binding SaveCommand}" Padding="18,6" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Margin="32,26,32,32" Spacing="18" MaxWidth="980" HorizontalAlignment="Left">
+        <TextBlock Classes="h1" Text="Ayarlar" />
+
+        <!-- Genel -->
+        <Border Classes="card">
+          <StackPanel Spacing="14">
+            <TextBlock Classes="h2" Text="Genel" />
+            <ToggleSwitch IsChecked="{Binding AutoStart}" OnContent="Oturum açılışında başlat" OffContent="Oturum açılışında başlat" />
+            <ToggleSwitch IsChecked="{Binding OpenDayEndAutomatically}" OnContent="Gün sonu saatinde günün özetini aç" OffContent="Gün sonu saatinde günün özetini aç" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="label" Text="Gün sonu saati" />
+                <TextBox Text="{Binding DayEndTime}" PlaceholderText="18:00" />
+              </StackPanel>
+              <StackPanel Grid.Column="1">
+                <TextBlock Classes="label" Text="Günlük hedef (saat)" />
+                <NumericUpDown Value="{Binding DailyTargetHours}" Minimum="0" Maximum="24" Increment="0.5" FormatString="0.#" />
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- İzleme -->
+        <Border Classes="card">
+          <StackPanel Spacing="14">
+            <TextBlock Classes="h2" Text="İzleme" />
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="label" Text="Boşta eşiği (dakika)" />
+                <NumericUpDown Value="{Binding IdleMinutes}" Minimum="1" Maximum="60" Increment="1" FormatString="0.#" />
+              </StackPanel>
+              <StackPanel Grid.Column="1">
+                <TextBlock Classes="label" Text="Mesai başlangıcı" />
+                <TextBox Text="{Binding WorkdayStart}" PlaceholderText="09:00" />
+              </StackPanel>
+              <StackPanel Grid.Column="2">
+                <TextBlock Classes="label" Text="Mesai bitişi" />
+                <TextBox Text="{Binding WorkdayEnd}" PlaceholderText="18:00" />
+              </StackPanel>
+            </Grid>
+            <StackPanel>
+              <TextBlock Classes="label" Text="Boşta sayılan uygulamalar" />
+              <TextBox Classes="multi" Text="{Binding IgnoredApps}" />
+              <TextBlock Classes="caption" Margin="0,4,0,0" Text="Her satıra bir süreç adı (ör. LockApp.exe). Bu uygulamalarda geçen süre çalışma sayılmaz." />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Sınıflandırma -->
+        <Border Classes="card">
+          <StackPanel Spacing="14">
+            <TextBlock Classes="h2" Text="Sınıflandırma" />
+            <StackPanel>
+              <TextBlock Classes="label" Text="Kurallar" />
+              <TextBox Classes="multi" MinHeight="110" Text="{Binding Rules}" PlaceholderText="Odeme\.sln => PAY-1042" />
+              <TextBlock Classes="caption" Margin="0,4,0,0" TextWrapping="Wrap"
+                         Text="Başlıkta issue key geçmeyen işler için: her satıra 'desen => ISSUE-KEY'. Desen, 'uygulama.exe pencere başlığı' metninde aranan düzenli ifadedir (büyük/küçük harf duyarsız). Satır başına # koyarak kuralı devre dışı bırakabilirsiniz." />
+            </StackPanel>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="label" Text="Yalnızca bu projeler" />
+                <TextBox Text="{Binding AllowedProjects}" PlaceholderText="PAY, CRM (boş = hepsi)" />
+              </StackPanel>
+              <StackPanel Grid.Column="1">
+                <TextBlock Classes="label" Text="Yoksayılan key'ler" />
+                <TextBox Text="{Binding IgnoredKeys}" />
+              </StackPanel>
+            </Grid>
+            <StackPanel>
+              <TextBlock Classes="label" Text="Issue key deseni" />
+              <TextBox Text="{Binding IssueKeyPattern}" FontFamily="Cascadia Mono, Consolas, monospace" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- Worklog -->
+        <Border Classes="card">
+          <StackPanel Spacing="14">
+            <TextBlock Classes="h2" Text="Worklog önerileri" />
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="label" Text="Yuvarlama adımı (dakika)" />
+                <NumericUpDown Value="{Binding RoundingMinutes}" Minimum="0" Maximum="60" Increment="5" FormatString="0" />
+              </StackPanel>
+              <StackPanel Grid.Column="1">
+                <TextBlock Classes="label" Text="En kısa worklog (dakika)" />
+                <NumericUpDown Value="{Binding MinWorklogMinutes}" Minimum="0" Maximum="120" Increment="5" FormatString="0" />
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- Git -->
+        <Border Classes="card">
+          <StackPanel Spacing="14">
+            <TextBlock Classes="h2" Text="Git" />
+            <StackPanel>
+              <TextBlock Classes="label" Text="Depo kök klasörleri" />
+              <TextBox Classes="multi" Text="{Binding RepoRoots}" PlaceholderText="C:\src" />
+              <TextBlock Classes="caption" Margin="0,4,0,0" Text="Her satıra bir klasör. Altındaki git depoları (3 seviye derinliğe kadar) taranır; commit mesajı ve branch adındaki issue key'ler eşleştirilir." TextWrapping="Wrap" />
+            </StackPanel>
+            <Grid ColumnDefinitions="2*,*" ColumnSpacing="16">
+              <StackPanel>
+                <TextBlock Classes="label" Text="Yazar e-postası" />
+                <TextBox Text="{Binding AuthorEmail}" PlaceholderText="boş = tüm yazarlar" />
+              </StackPanel>
+              <StackPanel Grid.Column="1">
+                <TextBlock Classes="label" Text="Tarama aralığı (dakika)" />
+                <NumericUpDown Value="{Binding ScanIntervalMinutes}" Minimum="5" Maximum="240" Increment="5" FormatString="0" />
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- Veri -->
+        <Border Classes="card">
+          <StackPanel Spacing="14">
+            <TextBlock Classes="h2" Text="Veri" />
+            <StackPanel Spacing="2">
+              <TextBlock Classes="label" Text="Veri klasörü" />
+              <TextBlock Classes="caption" Text="{Binding DataFolder}" />
+              <TextBlock Classes="caption" Text="{Binding DatabaseInfo}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Classes="ghost" Content="Klasörü aç" Command="{Binding OpenDataFolderCommand}" />
+              <Button Classes="ghost" Content="Logları aç" Command="{Binding OpenLogsCommand}" />
+            </StackPanel>
+            <Border Classes="divider" />
+            <StackPanel Spacing="6">
+              <TextBlock Classes="label" Text="Tempo Tracker (Python) verisini içe aktar" />
+              <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding LegacyPath}" />
+              <TextBlock Classes="caption" IsVisible="{Binding !LegacyAvailable}" Text="Bu bilgisayarda eski veritabanı bulunamadı." />
+              <Button Classes="ghost" Content="İçe aktar" Command="{Binding ImportLegacyCommand}" IsEnabled="{Binding LegacyAvailable}" HorizontalAlignment="Left" />
+            </StackPanel>
+            <TextBlock Classes="caption" TextWrapping="Wrap"
+                       Text="Tüm veriler yalnızca bu bilgisayarda, yukarıdaki klasördeki SQLite dosyasında tutulur. Uygulama dışarıya veri göndermez." />
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

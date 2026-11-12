@@ -1,0 +1,80 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:WorkLogger.Desktop.ViewModels"
+        x:Class="WorkLogger.Desktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="WorkLogger"
+        Icon="avares://WorkLogger/Assets/worklogger.ico"
+        Width="1320" Height="880" MinWidth="1040" MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackgroundBrush}">
+
+  <Grid ColumnDefinitions="236,*">
+    <!-- Kenar çubuğu -->
+    <Border Grid.Column="0" Background="{DynamicResource SidebarBrush}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0">
+      <DockPanel Margin="14,18,14,14">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="10" Margin="6,0,0,22">
+          <Image Source="avares://WorkLogger/Assets/worklogger-256.png" Width="30" Height="30" />
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="WorkLogger" FontWeight="SemiBold" FontSize="15" />
+            <TextBlock Text="çalışma günlüğü" Classes="caption" />
+          </StackPanel>
+        </StackPanel>
+
+        <!-- Durum kartı -->
+        <Border DockPanel.Dock="Bottom" Classes="card" Padding="14,12" CornerRadius="10">
+          <StackPanel Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Ellipse Width="9" Height="9" VerticalAlignment="Center"
+                       Fill="{DynamicResource PositiveBrush}" IsVisible="{Binding IsTracking}" />
+              <Ellipse Width="9" Height="9" VerticalAlignment="Center"
+                       Fill="{DynamicResource WarningBrush}" IsVisible="{Binding IsPaused}" />
+              <Ellipse Width="9" Height="9" VerticalAlignment="Center"
+                       Fill="{DynamicResource TextMutedBrush}" IsVisible="{Binding IsAgentDown}" />
+              <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold" FontSize="13" />
+            </StackPanel>
+            <TextBlock Text="{Binding CurrentActivity}" Classes="caption" TextTrimming="CharacterEllipsis"
+                       IsVisible="{Binding CurrentActivity, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <Button Classes="ghost" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Command="{Binding TogglePauseCommand}" IsVisible="{Binding !IsAgentDown}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Classes="glyph" FontSize="12" Text="&#xE769;" IsVisible="{Binding IsTracking}" />
+                <TextBlock Classes="glyph" FontSize="12" Text="&#xE768;" IsVisible="{Binding IsPaused}" />
+                <TextBlock Text="{Binding PauseButtonText}" />
+              </StackPanel>
+            </Button>
+            <Button Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Command="{Binding StartAgentCommand}" IsVisible="{Binding IsAgentDown}"
+                    Content="İzleyiciyi başlat" />
+          </StackPanel>
+        </Border>
+        <TextBlock DockPanel.Dock="Bottom" Text="{Binding VersionText}" Classes="caption" Margin="6,0,0,10" />
+
+        <StackPanel Spacing="2">
+          <Button Classes="nav" Classes.selected="{Binding IsDayPage}" Command="{Binding ShowDayCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Classes="glyph" Text="&#xE787;" />
+              <TextBlock Text="Gün" />
+            </StackPanel>
+          </Button>
+          <Button Classes="nav" Classes.selected="{Binding IsHistoryPage}" Command="{Binding ShowHistoryCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Classes="glyph" Text="&#xE9D2;" />
+              <TextBlock Text="Geçmiş ve raporlar" />
+            </StackPanel>
+          </Button>
+          <Button Classes="nav" Classes.selected="{Binding IsSettingsPage}" Command="{Binding ShowSettingsCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Classes="glyph" Text="&#xE713;" />
+              <TextBlock Text="Ayarlar" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </DockPanel>
+    </Border>
+
+    <!-- İçerik -->
+    <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" />
+  </Grid>
+</Window>

@@ -1,0 +1,61 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!--
+    Renk token'ları. Tüm görünümler yalnızca bu anahtarları DynamicResource ile kullanır;
+    açık/koyu tema geçişi buradan yönetilir.
+  -->
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Light">
+      <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F3F4F7" />
+      <SolidColorBrush x:Key="SidebarBrush" Color="#EBEDF2" />
+      <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="SurfaceAltBrush" Color="#F6F7F9" />
+      <SolidColorBrush x:Key="TrackBrush" Color="#EDEFF3" />
+      <SolidColorBrush x:Key="BorderBrush" Color="#E2E5EA" />
+      <SolidColorBrush x:Key="DividerBrush" Color="#ECEEF2" />
+      <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1A1D23" />
+      <SolidColorBrush x:Key="TextSecondaryBrush" Color="#545C68" />
+      <SolidColorBrush x:Key="TextMutedBrush" Color="#8A919C" />
+      <SolidColorBrush x:Key="AccentBrush" Color="#3B5BDB" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#E7ECFD" />
+      <SolidColorBrush x:Key="AccentTextBrush" Color="#2F4AC0" />
+      <SolidColorBrush x:Key="PositiveBrush" Color="#2B8A3E" />
+      <SolidColorBrush x:Key="PositiveSoftBrush" Color="#E6F4EA" />
+      <SolidColorBrush x:Key="WarningBrush" Color="#C2410C" />
+      <SolidColorBrush x:Key="WarningSoftBrush" Color="#FDEEE4" />
+      <SolidColorBrush x:Key="NeutralSoftBrush" Color="#EEF0F4" />
+      <SolidColorBrush x:Key="IdleBrush" Color="#D7DBE2" />
+      <SolidColorBrush x:Key="UnclassifiedBrush" Color="#9AA6B8" />
+      <SolidColorBrush x:Key="NavSelectedBrush" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="NavHoverBrush" Color="#E2E5EC" />
+    </ResourceDictionary>
+    <ResourceDictionary x:Key="Dark">
+      <SolidColorBrush x:Key="AppBackgroundBrush" Color="#111317" />
+      <SolidColorBrush x:Key="SidebarBrush" Color="#16191E" />
+      <SolidColorBrush x:Key="SurfaceBrush" Color="#1B1F25" />
+      <SolidColorBrush x:Key="SurfaceAltBrush" Color="#22262D" />
+      <SolidColorBrush x:Key="TrackBrush" Color="#272C34" />
+      <SolidColorBrush x:Key="BorderBrush" Color="#2C3139" />
+      <SolidColorBrush x:Key="DividerBrush" Color="#262A31" />
+      <SolidColorBrush x:Key="TextPrimaryBrush" Color="#E9EBEE" />
+      <SolidColorBrush x:Key="TextSecondaryBrush" Color="#AEB5BF" />
+      <SolidColorBrush x:Key="TextMutedBrush" Color="#7E8691" />
+      <SolidColorBrush x:Key="AccentBrush" Color="#6C8CFF" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#232C4A" />
+      <SolidColorBrush x:Key="AccentTextBrush" Color="#9DB2FF" />
+      <SolidColorBrush x:Key="PositiveBrush" Color="#51CF66" />
+      <SolidColorBrush x:Key="PositiveSoftBrush" Color="#1D3324" />
+      <SolidColorBrush x:Key="WarningBrush" Color="#FF922B" />
+      <SolidColorBrush x:Key="WarningSoftBrush" Color="#3A2717" />
+      <SolidColorBrush x:Key="NeutralSoftBrush" Color="#262A31" />
+      <SolidColorBrush x:Key="IdleBrush" Color="#30353D" />
+      <SolidColorBrush x:Key="UnclassifiedBrush" Color="#6B778A" />
+      <SolidColorBrush x:Key="NavSelectedBrush" Color="#232830" />
+      <SolidColorBrush x:Key="NavHoverBrush" Color="#1E2229" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+
+  <FontFamily x:Key="AppFont">Segoe UI Variable Text, Segoe UI, Inter, sans-serif</FontFamily>
+  <FontFamily x:Key="DisplayFont">Segoe UI Variable Display, Segoe UI, Inter, sans-serif</FontFamily>
+  <CornerRadius x:Key="CardRadius">12</CornerRadius>
+</ResourceDictionary>
