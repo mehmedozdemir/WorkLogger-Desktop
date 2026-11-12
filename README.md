@@ -19,7 +19,7 @@ okunur bir özete ve worklog önerilerine dönüştüren masaüstü uygulaması.
 
 ## Kurulum
 
-1. [Releases](https://github.com/mehmedozdemir/WorkLogger/releases) sayfasından
+1. [Releases](https://github.com/mehmedozdemir/WorkLogger-Desktop/releases) sayfasından
    `WorkLogger-x.y.z-win-x64.zip` dosyasını indirin.
 2. Zip'i kalıcı bir klasöre açın (ör. `%LOCALAPPDATA%\Programs\WorkLogger`).
 3. `WorkLogger.exe`'yi çalıştırın. .NET kurulumu gerekmez.

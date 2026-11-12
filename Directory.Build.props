@@ -14,7 +14,7 @@
     <Product>WorkLogger</Product>
     <Authors>Mehmet Ozdemir</Authors>
     <Copyright>Copyright (c) 2026 Mehmet Ozdemir</Copyright>
-    <RepositoryUrl>https://github.com/mehmedozdemir/WorkLogger</RepositoryUrl>
+    <RepositoryUrl>https://github.com/mehmedozdemir/WorkLogger-Desktop</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 </Project>
