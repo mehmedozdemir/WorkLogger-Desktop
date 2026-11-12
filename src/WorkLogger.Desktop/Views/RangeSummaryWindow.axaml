@@ -1,0 +1,88 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:WorkLogger.Desktop.ViewModels"
+        x:Class="WorkLogger.Desktop.Views.RangeSummaryWindow"
+        x:DataType="vm:RangeSummaryViewModel"
+        Title="Aralık özeti — WorkLogger"
+        Icon="avares://WorkLogger/Assets/worklogger.ico"
+        Width="620" Height="640" MinWidth="480" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackgroundBrush}">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- Başlık ve aralık seçimi -->
+    <Grid Margin="24,20,24,12" ColumnDefinitions="*,Auto">
+      <StackPanel Spacing="2">
+        <TextBlock Classes="h1" FontSize="22" Text="Ne yaptım?" />
+        <TextBlock Classes="caption" FontSize="13" Text="{Binding RangeText}" />
+      </StackPanel>
+      <Border Grid.Column="1" Background="{DynamicResource TrackBrush}" CornerRadius="9" Padding="3" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <Button Classes="segment" Classes.selected="{Binding Is1h}" Content="1 sa" Command="{Binding SelectCommand}" CommandParameter="1" />
+          <Button Classes="segment" Classes.selected="{Binding Is2h}" Content="2 sa" Command="{Binding SelectCommand}" CommandParameter="2" />
+          <Button Classes="segment" Classes.selected="{Binding Is4h}" Content="4 sa" Command="{Binding SelectCommand}" CommandParameter="4" />
+          <Button Classes="segment" Classes.selected="{Binding IsToday}" Content="Bugün" Command="{Binding SelectCommand}" CommandParameter="0" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Margin="24,0,24,16" Spacing="14">
+        <Border Classes="card">
+          <StackPanel Spacing="10">
+            <TextBlock Text="{Binding Headline}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{Binding Narrative}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="6" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                  <TextBlock Classes="body" Text="{Binding}" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <Border Classes="card" IsVisible="{Binding !!Issues.Count}">
+          <StackPanel Spacing="12">
+            <TextBlock Classes="h2" Text="Issue'lar" />
+            <ItemsControl ItemsSource="{Binding Issues}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Spacing="10" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:RangeIssueRow">
+                  <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10">
+                    <Ellipse Width="9" Height="9" Fill="{Binding Brush}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Classes="key" Text="{Binding Key}" />
+                    <TextBlock Grid.Column="2" Classes="num" FontWeight="SemiBold" Text="{Binding DurationText}" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Classes="caption" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <TextBlock Classes="caption" Text="{Binding OtherText}" TextWrapping="Wrap"
+                   IsVisible="{Binding OtherText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+      </StackPanel>
+    </ScrollViewer>
+
+    <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="24,12">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding Toast}" VerticalAlignment="Center" Foreground="{DynamicResource PositiveBrush}" />
+        <Button Grid.Column="1" Classes="accent" Command="{Binding CopyCommand}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Classes="glyph" FontSize="12" Text="&#xE8C8;" />
+            <TextBlock Text="Kopyala" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

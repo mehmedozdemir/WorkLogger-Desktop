@@ -19,6 +19,7 @@ public partial class App : Application
     private MainWindow? _window;
     private MainWindowViewModel? _viewModel;
     private NativeMenuItem? _pauseItem;
+    private RangeSummaryWindow? _rangeWindow;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -31,6 +32,7 @@ public partial class App : Application
 
             _viewModel = new MainWindowViewModel(_services);
             _viewModel.DayEndReached += (_, _) => ShowMainWindow();
+            _viewModel.Day.RangeSummaryRequested += (_, _) => ShowRangeSummary();
             _viewModel.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(MainWindowViewModel.IsPaused) && _pauseItem is not null)
@@ -61,6 +63,9 @@ public partial class App : Application
             _viewModel?.ShowTodayCommand.Execute(null);
         };
 
+        var range = new NativeMenuItem("Son 2 saatte ne yaptım?");
+        range.Click += (_, _) => ShowRangeSummary();
+
         _pauseItem = new NativeMenuItem("İzlemeyi duraklat");
         _pauseItem.Click += (_, _) => _viewModel?.TogglePauseCommand.Execute(null);
 
@@ -73,6 +78,7 @@ public partial class App : Application
         var menu = new NativeMenu();
         menu.Items.Add(open);
         menu.Items.Add(today);
+        menu.Items.Add(range);
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(_pauseItem);
         menu.Items.Add(new NativeMenuItemSeparator());
@@ -97,6 +103,25 @@ public partial class App : Application
         if (_window.WindowState == WindowState.Minimized)
             _window.WindowState = WindowState.Normal;
         _window.Activate();
+    }
+
+    private void ShowRangeSummary()
+    {
+        if (_services is null)
+            return;
+        if (_rangeWindow is null)
+        {
+            var vm = new RangeSummaryViewModel(_services);
+            _rangeWindow = new RangeSummaryWindow { DataContext = vm };
+            _rangeWindow.Closed += (_, _) => _rangeWindow = null;
+            _ = vm.LoadAsync();
+        }
+        else if (_rangeWindow.DataContext is RangeSummaryViewModel vm)
+        {
+            _ = vm.LoadAsync();
+        }
+        _rangeWindow.Show();
+        _rangeWindow.Activate();
     }
 
     private void ListenForShowSignal()

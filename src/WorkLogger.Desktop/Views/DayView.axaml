@@ -16,6 +16,13 @@
           </StackPanel>
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
             <ProgressBar IsIndeterminate="True" Width="60" Height="3" IsVisible="{Binding IsLoading}" Margin="0,0,8,0" />
+            <Button Classes="ghost" Command="{Binding OpenRangeSummaryCommand}" Margin="0,0,8,0"
+                    ToolTip.Tip="Son 1/2/4 saatin ya da bugünün kısa özeti">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Classes="glyph" FontSize="12" Text="&#xE823;" />
+                <TextBlock Text="Ne yaptım?" />
+              </StackPanel>
+            </Button>
             <Button Classes="icon" Command="{Binding PreviousDayCommand}" ToolTip.Tip="Önceki gün">
               <TextBlock Classes="glyph" FontSize="12" Text="&#xE76B;" />
             </Button>
@@ -31,6 +38,17 @@
 
         <Border Classes="card" Background="{DynamicResource WarningSoftBrush}" IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}">
           <TextBlock Text="{Binding Error}" Foreground="{DynamicResource WarningBrush}" TextWrapping="Wrap" />
+        </Border>
+
+        <!-- Kapatılmamış gün hatırlatması -->
+        <Border Classes="card" Padding="16,10" Background="{DynamicResource AccentSoftBrush}" BorderThickness="0"
+                IsVisible="{Binding PendingDay, Converter={x:Static ObjectConverters.IsNotNull}}">
+          <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+            <TextBlock Classes="glyph" Text="&#xE787;" Foreground="{DynamicResource AccentTextBrush}" />
+            <TextBlock Grid.Column="1" Text="{Binding PendingDay.Text, FallbackValue=''}" VerticalAlignment="Center"
+                       Foreground="{DynamicResource AccentTextBrush}" TextWrapping="Wrap" />
+            <Button Grid.Column="2" Classes="ghost" Content="Günü aç" Command="{Binding OpenPendingDayCommand}" />
+          </Grid>
         </Border>
 
         <!-- KPI kartları -->
@@ -178,8 +196,23 @@
                     <TextBlock Text="Özeti kopyala" />
                   </StackPanel>
                 </Button>
+                <Button Classes="accent" Command="{Binding CloseDayCommand}" IsVisible="{Binding !IsClosed}"
+                        ToolTip.Tip="Günü tamamlandı olarak işaretler; özet ve worklog toplamı arşivlenir">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Classes="glyph" FontSize="12" Text="&#xE73E;" />
+                    <TextBlock Text="Günü kapat" />
+                  </StackPanel>
+                </Button>
               </StackPanel>
             </Grid>
+            <Border Classes="pill positive" HorizontalAlignment="Left" IsVisible="{Binding IsClosed}" Padding="12,5">
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Classes="glyph" FontSize="12" Text="&#xE73E;" Foreground="{DynamicResource PositiveBrush}" />
+                <TextBlock Text="{Binding ClosedText}" FontSize="12.5" VerticalAlignment="Center" />
+                <Button Content="Yeniden aç" Command="{Binding ReopenDayCommand}" Padding="8,2" FontSize="12"
+                        Background="Transparent" BorderThickness="0" Foreground="{DynamicResource AccentTextBrush}" />
+              </StackPanel>
+            </Border>
             <TextBlock Text="{Binding Headline}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
             <ItemsControl ItemsSource="{Binding Narrative}">
               <ItemsControl.ItemsPanel>
@@ -216,7 +249,7 @@
             <Grid ColumnDefinitions="*,Auto">
               <StackPanel Spacing="2">
                 <TextBlock Classes="h2" Text="Worklog önerileri" />
-                <TextBlock Classes="caption" Text="Süreleri ve açıklamaları düzenleyip tabloyu Tempo/Jira ya da Excel'e yapıştırabilirsiniz." />
+                <TextBlock Classes="caption" Text="Düzenlemeler otomatik kaydedilir. Tabloyu Tempo/Jira ya da Excel'e yapıştırabilirsiniz." />
               </StackPanel>
               <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
                 <Button Classes="ghost" Content="Hedefe dengele" Command="{Binding BalanceWorklogsCommand}"
@@ -247,20 +280,34 @@
               </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:WorklogRow">
-                  <Grid ColumnDefinitions="150,90,130,90,*" ColumnSpacing="12">
+                  <Grid ColumnDefinitions="150,90,130,90,*,34" ColumnSpacing="12">
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                       <Ellipse Width="9" Height="9" Fill="{Binding Brush}" />
                       <TextBlock Classes="key" Text="{Binding IssueKey}" />
+                      <Ellipse Width="5" Height="5" Fill="{DynamicResource AccentBrush}" IsVisible="{Binding IsEdited}"
+                               ToolTip.Tip="Düzenlendi (kaydedildi)" VerticalAlignment="Top" />
                     </StackPanel>
                     <TextBlock Grid.Column="1" Classes="caption num" Text="{Binding TrackedText}" VerticalAlignment="Center" />
                     <NumericUpDown Grid.Column="2" Value="{Binding Minutes}" Increment="15" Minimum="0" Maximum="1440" FormatString="0" />
                     <TextBox Grid.Column="3" Text="{Binding Start}" />
                     <TextBox Grid.Column="4" Text="{Binding Description}" />
+                    <Button Grid.Column="5" Classes="icon" Command="{Binding RemoveCommand}" IsVisible="{Binding Manual}" ToolTip.Tip="Satırı sil">
+                      <TextBlock Classes="glyph" FontSize="12" Text="&#xE74D;" />
+                    </Button>
                   </Grid>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <TextBlock Classes="caption" Text="{Binding WorklogTotal}" HorizontalAlignment="Right" />
+            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8">
+              <TextBox Width="150" Text="{Binding NewIssueKey}" PlaceholderText="ISSUE-123" />
+              <Button Grid.Column="1" Classes="ghost" Command="{Binding AddWorklogCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBlock Classes="glyph" FontSize="12" Text="&#xE710;" />
+                  <TextBlock Text="Satır ekle" />
+                </StackPanel>
+              </Button>
+              <TextBlock Grid.Column="2" Classes="caption" Text="{Binding WorklogTotal}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            </Grid>
           </StackPanel>
         </Border>
 
@@ -268,7 +315,11 @@
         <Grid ColumnDefinitions="*,*" ColumnSpacing="16" IsVisible="{Binding HasData}">
           <Border Classes="card">
             <StackPanel Spacing="12">
-              <TextBlock Classes="h2" Text="Sınıflandırılmamış işler" />
+              <StackPanel Spacing="2">
+                <TextBlock Classes="h2" Text="Sınıflandırılmamış işler" />
+                <TextBlock Classes="caption" TextWrapping="Wrap" IsVisible="{Binding HasUnclassified}"
+                           Text="Bir işi bir issue'ya atayın; isterseniz kural olarak kaydedip sonraki günlerde de otomatik eşlensin." />
+              </StackPanel>
               <TextBlock Classes="caption" IsVisible="{Binding !HasUnclassified}" Text="Tüm aktif süre bir issue'ya eşlendi." />
               <ItemsControl ItemsSource="{Binding Unclassified}">
                 <ItemsControl.ItemsPanel>
@@ -277,15 +328,67 @@
                   </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
-                  <DataTemplate x:DataType="vm:UnclassifiedRow">
-                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
-                      <TextBlock Text="{Binding Label}" FontSize="13" TextTrimming="CharacterEllipsis" />
-                      <TextBlock Grid.Column="1" Classes="num" Text="{Binding DurationText}" FontSize="13" FontWeight="SemiBold" />
-                      <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="caption" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+                  <DataTemplate x:DataType="vm:UnclassifiedItem">
+                    <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10">
+                      <TextBlock Text="{Binding Label}" FontSize="13" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Classes="num" Text="{Binding DurationText}" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      <Button Grid.Column="2" Grid.RowSpan="2" Classes="ghost" Padding="10,4" FontSize="12" VerticalAlignment="Center"
+                              IsVisible="{Binding CanAssign}" Content="Ata">
+                        <Button.Flyout>
+                          <Flyout Placement="LeftEdgeAlignedTop">
+                            <StackPanel Width="320" Spacing="10" Margin="4">
+                              <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                              <TextBlock Classes="caption" Text="{Binding SuggestionText}" IsVisible="{Binding HasSuggestion}"
+                                         ToolTip.Tip="Bu işin hemen öncesinde/sonrasında çalışılan issue" />
+                              <TextBox Text="{Binding KeyInput}" PlaceholderText="ISSUE-123" />
+                              <ItemsControl ItemsSource="{Binding QuickKeys}">
+                                <ItemsControl.ItemsPanel>
+                                  <ItemsPanelTemplate>
+                                    <WrapPanel ItemSpacing="6" LineSpacing="6" />
+                                  </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                  <DataTemplate x:DataType="x:String">
+                                    <Button Content="{Binding}" Padding="8,2" FontSize="12" Classes="ghost"
+                                            Command="{Binding $parent[ItemsControl].((vm:UnclassifiedItem)DataContext).UseKeyCommand}"
+                                            CommandParameter="{Binding}" />
+                                  </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                              </ItemsControl>
+                              <CheckBox IsChecked="{Binding CreateRule}" Content="Bundan sonra da bu işe ata (kural oluştur)" />
+                              <TextBlock Classes="caption" Text="{Binding PreviewText}" TextWrapping="Wrap"
+                                         IsVisible="{Binding CreateRule}" />
+                              <TextBlock Text="{Binding Error}" Foreground="{DynamicResource WarningBrush}" FontSize="12" TextWrapping="Wrap"
+                                         IsVisible="{Binding Error, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                              <Button Classes="accent" HorizontalAlignment="Right" Content="Ata" Command="{Binding AssignCommand}" />
+                            </StackPanel>
+                          </Flyout>
+                        </Button.Flyout>
+                      </Button>
+                      <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Classes="caption" TextTrimming="CharacterEllipsis">
+                        <Run Text="{Binding Detail}" />
+                        <Run Text="  " />
+                        <Run Text="{Binding SuggestionText}" Foreground="{DynamicResource AccentTextBrush}" />
+                      </TextBlock>
                     </Grid>
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
+              <StackPanel Spacing="6" IsVisible="{Binding HasAssignments}">
+                <Border Classes="divider" Margin="0,4,0,4" />
+                <TextBlock Classes="overline" Text="BU GÜN ELLE ATANANLAR" />
+                <ItemsControl ItemsSource="{Binding Assignments}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AssignmentRow">
+                      <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+                        <TextBlock Text="{Binding Text}" FontSize="12.5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Content="Geri al" Command="{Binding RemoveCommand}" Padding="8,2" FontSize="12"
+                                Background="Transparent" BorderThickness="0" Foreground="{DynamicResource AccentTextBrush}" />
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
             </StackPanel>
           </Border>
           <Border Grid.Column="1" Classes="card">

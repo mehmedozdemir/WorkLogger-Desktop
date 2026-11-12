@@ -18,6 +18,7 @@ public sealed class AppServices
         Database.Migrate();
         Activity = new ActivityRepository(Database);
         AgentState = new AgentStateRepository(Database);
+        Journal = new JournalRepository(Database);
         SettingsStore = new SettingsStore(Paths);
         ReloadSettings();
     }
@@ -26,6 +27,7 @@ public sealed class AppServices
     public Database Database { get; }
     public ActivityRepository Activity { get; }
     public AgentStateRepository AgentState { get; }
+    public JournalRepository Journal { get; }
     public SettingsStore SettingsStore { get; }
     public WorkLoggerSettings Settings { get; private set; } = new();
     public string? SettingsError { get; private set; }
@@ -42,6 +44,23 @@ public sealed class AppServices
         SettingsStore.Save(settings);
         ReloadSettings();
         SettingsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Sınıflandırma kuralı ekler (aynı desen varsa hedef key'i günceller) ve ayarları kaydeder.</summary>
+    public void AddRule(string pattern, string issueKey)
+    {
+        var settings = SettingsStore.Clone(Settings);
+        var existing = settings.Classification.Rules.FirstOrDefault(r => r.Pattern == pattern);
+        if (existing is not null)
+        {
+            existing.IssueKey = issueKey;
+            existing.Enabled = true;
+        }
+        else
+        {
+            settings.Classification.Rules.Add(new Core.Settings.ClassificationRule { Pattern = pattern, IssueKey = issueKey });
+        }
+        SaveSettings(settings);
     }
 
     public DayAnalyzer CreateAnalyzer() =>
